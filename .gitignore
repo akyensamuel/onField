@@ -1,0 +1,248 @@
+# OnField Recording System - Git Ignore File
+# Created: October 26, 2025
+
+# ============================================
+# Python
+# ============================================
+*.py[cod]
+*$py.class
+*.so
+.Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ============================================
+# Django
+# ============================================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Django migrations (keep tracked, but you can uncomment to ignore)
+# */migrations/*.py
+# */migrations/*.pyc
+# !*/migrations/__init__.py
+
+# Django static files (collected)
+/staticfiles/
+/static_root/
+/static/
+
+# Django media files (user uploads)
+/media/
+/media_root/
+
+# ============================================
+# Environment & Secrets
+# ============================================
+.env
+.env.local
+.env.*.local
+*.env
+
+# Virtual Environment
+venv/
+env/
+ENV/
+virtualenv/
+virtualEnvironment/
+.venv/
+
+# ============================================
+# Database
+# ============================================
+*.sqlite3
+*.db
+*.sqlite
+
+# PostgreSQL
+*.sql
+*.dump
+
+# ============================================
+# IDE & Editors
+# ============================================
+
+# VS Code
+.vscode/
+*.code-workspace
+.history/
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+.idea_modules/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.*.sw[a-z]
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# ============================================
+# Operating System
+# ============================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+.directory
+.Trash-*
+
+# ============================================
+# Testing
+# ============================================
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.cache
+
+# ============================================
+# Build & Distribution
+# ============================================
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ============================================
+# Jupyter Notebook (if used)
+# ============================================
+.ipynb_checkpoints
+*.ipynb
+
+# ============================================
+# Celery (Background Jobs)
+# ============================================
+celerybeat-schedule
+celerybeat.pid
+
+# ============================================
+# Documentation
+# ============================================
+docs/_build/
+site/
+
+# ============================================
+# Backup & Temporary Files
+# ============================================
+*.bak
+*.tmp
+*.temp
+*.orig
+*~
+
+# Export files (if generated in root)
+*.xlsx
+*.pdf
+exports/
+
+# ============================================
+# Node.js (if using for frontend build tools)
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ============================================
+# Logs
+# ============================================
+*.log
+logs/
+*.log.*
+
+# ============================================
+# Security & Credentials
+# ============================================
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+credentials/
+
+# ============================================
+# Project Specific
+# ============================================
+
+# Supabase local config (if using Supabase CLI)
+.supabase/
+
+# OpenCV models and training data (if added later)
+models/
+training_data/
+
+# Export temporary files
+temp_exports/
+
+# Test data
+test_data/
+sample_data/
+
+# ============================================
+# Keep These Files (Exceptions)
+# ============================================
+!.gitkeep
+!requirements.txt
+!README.md
+!.env.example

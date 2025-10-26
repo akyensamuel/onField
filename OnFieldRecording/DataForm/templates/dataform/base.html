@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en" class="dark-mode-transition">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>{% block title %}OnField Recording{% endblock %}</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#8b5cf6',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        warning: '#f59e0b',
+                        info: '#06b6d4',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Dark mode transition */
+        .dark-mode-transition {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: #374151;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Form input styles */
+        .form-input, .form-select, .form-textarea {
+            @apply w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all;
+        }
+        
+        .form-checkbox {
+            @apply w-5 h-5 text-primary border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary;
+        }
+        
+        /* Button styles */
+        .btn {
+            @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 inline-flex items-center justify-center;
+        }
+        .btn-primary {
+            @apply bg-primary text-white hover:bg-blue-600 active:bg-blue-700;
+        }
+        .btn-secondary {
+            @apply bg-gray-200 text-gray-800 hover:bg-gray-300 active:bg-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600;
+        }
+        .btn-success {
+            @apply bg-success text-white hover:bg-green-600 active:bg-green-700;
+        }
+        .btn-danger {
+            @apply bg-danger text-white hover:bg-red-600 active:bg-red-700;
+        }
+        .btn-sm {
+            @apply px-4 py-2 text-sm;
+        }
+        
+        /* Badge styles */
+        .badge {
+            @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+        }
+        .badge-primary { @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200; }
+        .badge-success { @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200; }
+        .badge-warning { @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200; }
+        .badge-danger { @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200; }
+        .badge-gray { @apply bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200; }
+        
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen dark-mode-transition">
+    
+    <!-- Dark Mode Script (must be in body for immediate effect) -->
+    <script>
+        // Check for saved theme preference or default to light mode
+        if (localStorage.getItem('darkMode') === 'true' || 
+            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+        
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+        }
+    </script>
+    
+    <!-- Navigation -->
+    {% if user.is_authenticated %}
+    <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-50 dark-mode-transition">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Logo & Brand -->
+                <div class="flex items-center">
+                    <a href="{% url 'dashboard' %}" class="flex items-center space-x-3">
+                        <i class="fas fa-clipboard-list text-2xl text-primary"></i>
+                        <span class="text-xl font-bold text-gray-800 dark:text-white">OnField</span>
+                    </a>
+                </div>
+                
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="{% url 'dashboard' %}" class="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-home mr-2"></i>Dashboard
+                    </a>
+                    
+                    {% if user.profile.role == 'admin' %}
+                    <a href="{% url 'operation_list' %}" class="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-tasks mr-2"></i>Operations
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'record_list' %}" class="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-list mr-2"></i>Records
+                    </a>
+                    
+                    <a href="{% url 'record_create' %}" class="btn btn-primary text-sm">
+                        <i class="fas fa-plus mr-2"></i>New Record
+                    </a>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="flex items-center space-x-4">
+                    <!-- Dark Mode Toggle -->
+                    <button onclick="toggleDarkMode()" class="p-2 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Toggle Dark Mode">
+                        <i class="fas fa-moon dark:hidden text-lg"></i>
+                        <i class="fas fa-sun hidden dark:inline text-lg"></i>
+                    </button>
+                    
+                    <!-- Operation Status Indicator -->
+                    {% if active_operation %}
+                    <div class="hidden sm:flex items-center space-x-2 bg-green-50 dark:bg-green-900 px-3 py-1 rounded-full">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <span class="text-sm text-green-700 dark:text-green-300 font-medium">{{ active_operation.name }}</span>
+                    </div>
+                    {% else %}
+                    <div class="hidden sm:flex items-center space-x-2 bg-red-50 dark:bg-red-900 px-3 py-1 rounded-full">
+                        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                        <span class="text-sm text-red-700 dark:text-red-300 font-medium">No Active Operation</span>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- User dropdown -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary">
+                            <div class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center">
+                                <span class="text-sm font-medium">{{ user.username|slice:":1"|upper }}</span>
+                            </div>
+                            <span class="hidden md:block text-sm font-medium">{{ user.username }}</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        
+                        <div x-show="open" @click.away="open = false" 
+                             class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 border dark:border-gray-700"
+                             style="display: none;">
+                            <div class="px-4 py-2 border-b dark:border-gray-700">
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ user.get_full_name|default:user.username }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                    {% if user.profile.role == 'admin' %}
+                                    <span class="badge badge-primary">Admin</span>
+                                    {% else %}
+                                    <span class="badge badge-gray">Staff</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            
+                            {% if user.is_staff %}
+                            <a href="/admin/" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-cog mr-2"></i>Admin Panel
+                            </a>
+                            {% endif %}
+                            
+                            <a href="{% url 'password_change' %}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-key mr-2"></i>Change Password
+                            </a>
+                            
+                            <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mobile menu button -->
+                <div class="flex md:hidden items-center">
+                    <button type="button" class="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary" 
+                            onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-gray-800 border-t dark:border-gray-700">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="{% url 'dashboard' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i class="fas fa-home mr-2"></i>Dashboard
+                </a>
+                
+                {% if user.profile.role == 'admin' %}
+                <a href="{% url 'operation_list' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i class="fas fa-tasks mr-2"></i>Operations
+                </a>
+                {% endif %}
+                
+                <a href="{% url 'record_list' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i class="fas fa-list mr-2"></i>Records
+                </a>
+                
+                <a href="{% url 'record_create' %}" class="block px-3 py-2 rounded-md text-base font-medium text-primary hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                    <i class="fas fa-plus mr-2"></i>New Record
+                </a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+    
+    <!-- Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% for message in messages %}
+        <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800{% elif message.tags == 'success' %}bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800{% elif message.tags == 'warning' %}bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800{% else %}bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800{% endif %} flex items-start">
+            <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'success' %}fa-check-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mt-0.5 mr-3"></i>
+            <div class="flex-1">{{ message }}</div>
+            <button onclick="this.parentElement.remove()" class="ml-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Main Content -->
+    <main class="{% if user.is_authenticated %}max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6{% endif %}">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t dark:border-gray-700 mt-12 py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center text-gray-600 dark:text-gray-400 text-sm">
+                <p>&copy; 2025 OnField Recording System. All rights reserved.</p>
+                <p class="mt-1">Developed for field data collection and management.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Alpine.js for dropdown interactivity -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

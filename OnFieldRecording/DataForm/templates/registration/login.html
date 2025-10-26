@@ -1,0 +1,90 @@
+{% extends "dataform/base.html" %}
+
+{% block title %}Login - OnField Recording{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full">
+        <!-- Logo & Title -->
+        <div class="text-center mb-8">
+            <div class="flex justify-center mb-4">
+                <div class="w-16 h-16 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center shadow-lg">
+                    <i class="fas fa-clipboard-list text-3xl text-primary"></i>
+                </div>
+            </div>
+            <h2 class="text-4xl font-extrabold text-white">OnField Recording</h2>
+            <p class="mt-2 text-blue-100 dark:text-gray-300">Sign in to your account</p>
+        </div>
+        
+        <!-- Login Form Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 px-4 py-3 rounded-lg">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+                
+                <!-- Username Field -->
+                <div>
+                    <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-user mr-2 text-gray-400"></i>Username
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.username.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Password Field -->
+                <div>
+                    <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-lock mr-2 text-gray-400"></i>Password
+                    </label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.password.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Remember Me -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="remember-me" name="remember-me" type="checkbox" 
+                               class="h-4 w-4 text-primary focus:ring-primary border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded">
+                        <label for="remember-me" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                            Remember me
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div>
+                    <button type="submit" class="w-full btn btn-primary text-lg py-4 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        Sign In
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Help Text -->
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Contact your administrator if you need access
+                </p>
+            </div>
+        </div>
+        
+        <!-- Footer Info -->
+        <div class="mt-8 text-center text-white dark:text-gray-300 text-sm">
+            <p class="flex items-center justify-center">
+                <i class="fas fa-shield-alt mr-2"></i>
+                Secure field data collection system
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

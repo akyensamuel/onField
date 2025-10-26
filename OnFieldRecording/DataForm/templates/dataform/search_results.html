@@ -1,0 +1,229 @@
+{% extends "dataform/base.html" %}
+
+{% block title %}
+    {% if search_type == 'operation' %}
+        Search in {{ operation.name }} - OnField Recording
+    {% else %}
+        System-wide Search - OnField Recording
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Search Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">
+                {% if search_type == 'operation' %}
+                    <i class="fas fa-search mr-2"></i>Search in {{ operation.name }}
+                {% else %}
+                    <i class="fas fa-search mr-2"></i>System-wide Record Search
+                {% endif %}
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">
+                {% if query %}
+                    Found {{ total_results }} result{{ total_results|pluralize }} for "{{ query }}"
+                {% else %}
+                    Enter a search term to find records
+                {% endif %}
+            </p>
+        </div>
+        {% if search_type == 'operation' %}
+        <a href="{% url 'operation_detail' operation.pk %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Operation
+        </a>
+        {% else %}
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Search Form -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <form method="get" class="flex gap-4">
+            <div class="flex-1">
+                <label for="search-input" class="sr-only">Search</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input
+                        type="text"
+                        id="search-input"
+                        name="q"
+                        value="{{ query }}"
+                        placeholder="Search by customer name, contact, account, meter number, GPS address, job number, or remarks..."
+                        class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent"
+                        autofocus
+                    >
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary px-8">
+                <i class="fas fa-search mr-2"></i>Search
+            </button>
+            {% if query %}
+            <a href="{% if search_type == 'operation' %}{% url 'operation_search' operation.pk %}{% else %}{% url 'system_search' %}{% endif %}" class="btn btn-secondary">
+                <i class="fas fa-times mr-2"></i>Clear
+            </a>
+            {% endif %}
+        </form>
+        
+        <!-- Search Tips -->
+        <div class="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            <i class="fas fa-info-circle mr-1"></i>
+            <strong>Search Tips:</strong> Enter any keyword to search across customer names, contacts, account numbers, meter numbers, GPS addresses, job numbers, and remarks.
+            {% if search_type == 'system' %}
+            You can also search by operation name.
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Search Results -->
+    {% if query %}
+        {% if records %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <div class="p-6 border-b dark:border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">
+                    Search Results ({{ total_results }} record{{ total_results|pluralize }})
+                </h2>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-900">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Job #</th>
+                            {% if search_type == 'system' %}
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Operation</th>
+                            {% endif %}
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customer</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Contact</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Account #</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Meter #</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Balance</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Reading</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Anomaly</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for record in records %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">{{ record.record_number }}</div>
+                            </td>
+                            {% if search_type == 'system' %}
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-700 dark:text-gray-300">{{ record.operation.name }}</div>
+                                {% if record.operation.is_active %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+                                    <i class="fas fa-circle text-xs mr-1 animate-pulse"></i>Active
+                                </span>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                            <td class="px-4 py-4">
+                                <div class="text-sm text-gray-900 dark:text-white">{{ record.customer_name }}</div>
+                                {% if record.gps_address %}
+                                <div class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs" title="{{ record.gps_address }}">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>{{ record.gps_address|truncatechars:40 }}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-700 dark:text-gray-300">{{ record.customer_contact }}</div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-700 dark:text-gray-300">{{ record.account_number }}</div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-700 dark:text-gray-300">{{ record.meter_number }}</div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">₱{{ record.todays_balance|floatformat:2|default:"0.00" }}</div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-700 dark:text-gray-300">{{ record.meter_reading|floatformat:2|default:"0.00" }}</div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                {% if record.type_of_anomaly == 'none' %}
+                                <span class="badge badge-success">
+                                    <i class="fas fa-check-circle mr-1"></i>None
+                                </span>
+                                {% else %}
+                                <span class="badge badge-warning">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>{{ record.type_of_anomaly|title }}
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                <a href="{% url 'record_detail' record.pk %}" class="text-primary hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300" title="View Details">
+                                    <i class="fas fa-eye mr-1"></i>View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="px-6 py-4 border-t dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-700 dark:text-gray-300">
+                        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ total_results }} results
+                    </div>
+                    <div class="flex gap-2">
+                        {% if page_obj.has_previous %}
+                        <a href="?q={{ query }}&page={{ page_obj.previous_page_number }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        {% endif %}
+                        
+                        <span class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                        
+                        {% if page_obj.has_next %}
+                        <a href="?q={{ query }}&page={{ page_obj.next_page_number }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <!-- No Results -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
+            <i class="fas fa-search text-gray-300 dark:text-gray-600 text-6xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No Results Found</h3>
+            <p class="text-gray-500 dark:text-gray-400 mb-6">
+                No records match your search for "<strong>{{ query }}</strong>".
+                <br>Try different keywords or check your spelling.
+            </p>
+            <a href="{% if search_type == 'operation' %}{% url 'operation_search' operation.pk %}{% else %}{% url 'system_search' %}{% endif %}" class="btn btn-primary">
+                <i class="fas fa-redo mr-2"></i>New Search
+            </a>
+        </div>
+        {% endif %}
+    {% else %}
+    <!-- Empty State - No Query Yet -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center">
+        <i class="fas fa-search text-gray-300 dark:text-gray-600 text-6xl mb-4"></i>
+        <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">Start Your Search</h3>
+        <p class="text-gray-500 dark:text-gray-400">
+            Enter a search term above to find records
+            {% if search_type == 'operation' %}
+                in this operation
+            {% else %}
+                across all operations
+            {% endif %}.
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

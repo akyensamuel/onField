@@ -1,0 +1,143 @@
+{% extends "dataform/base.html" %}
+
+{% block title %}{% if form.instance.pk %}Edit Operation{% else %}Create Operation{% endif %} - OnField Recording{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    <!-- Header -->
+    <div>
+        <a href="{% url 'operation_list' %}" class="text-primary hover:text-blue-600 text-sm font-medium mb-2 inline-block">
+            <i class="fas fa-arrow-left mr-1"></i> Back to Operations
+        </a>
+        <h1 class="text-3xl font-bold text-gray-800">
+            {% if form.instance.pk %}
+            Edit Operation
+            {% else %}
+            Create New Operation
+            {% endif %}
+        </h1>
+        <p class="text-gray-600 mt-1">Define a new field data collection operation</p>
+    </div>
+    
+    <!-- Warning for Active Operations -->
+    {% if form.instance.pk and form.instance.is_active %}
+    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg">
+        <div class="flex">
+            <i class="fas fa-exclamation-triangle text-yellow-500 text-xl mr-3"></i>
+            <div>
+                <h3 class="font-semibold text-yellow-800">Active Operation</h3>
+                <p class="text-yellow-700 text-sm">This operation is currently active. Changes may affect ongoing data collection.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Form -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Display Form Errors -->
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+                <div class="flex">
+                    <i class="fas fa-times-circle text-red-500 text-xl mr-3"></i>
+                    <div>
+                        <h3 class="font-semibold text-red-800">Error</h3>
+                        {% for error in form.non_field_errors %}
+                        <p class="text-red-700 text-sm">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Operation Name -->
+            <div>
+                <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Operation Name <span class="text-red-500">*</span>
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                <p class="text-red-500 text-sm mt-1">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
+                    {{ form.name.errors.0 }}
+                </p>
+                {% endif %}
+                <p class="text-gray-500 text-xs mt-1">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    A descriptive name for this data collection operation
+                </p>
+            </div>
+            
+            <!-- Description -->
+            <div>
+                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <p class="text-red-500 text-sm mt-1">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
+                    {{ form.description.errors.0 }}
+                </p>
+                {% endif %}
+                <p class="text-gray-500 text-xs mt-1">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Details about the purpose, scope, and objectives of this operation
+                </p>
+            </div>
+            
+            <!-- Active Status -->
+            <div class="border rounded-lg p-4 bg-gray-50">
+                <div class="flex items-start">
+                    <div class="flex items-center h-5">
+                        {{ form.is_active }}
+                    </div>
+                    <div class="ml-3">
+                        <label for="{{ form.is_active.id_for_label }}" class="font-medium text-gray-700">
+                            Set as Active Operation
+                        </label>
+                        <p class="text-gray-500 text-sm">
+                            Only one operation can be active at a time. Staff can only create records for the active operation.
+                        </p>
+                    </div>
+                </div>
+                {% if form.is_active.errors %}
+                <p class="text-red-500 text-sm mt-2">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
+                    {{ form.is_active.errors.0 }}
+                </p>
+                {% endif %}
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="flex items-center justify-between pt-4 border-t">
+                <a href="{% url 'operation_list' %}" class="text-gray-600 hover:text-gray-800 font-medium">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save mr-2"></i>
+                    {% if form.instance.pk %}Update Operation{% else %}Create Operation{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Help Text -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+        <div class="flex">
+            <i class="fas fa-lightbulb text-blue-500 text-xl mr-3"></i>
+            <div>
+                <h3 class="font-semibold text-blue-800">Tips</h3>
+                <ul class="text-blue-700 text-sm space-y-1 mt-2">
+                    <li><i class="fas fa-check mr-2"></i>Use clear, descriptive names (e.g., "Q1 2024 Meter Reading Campaign")</li>
+                    <li><i class="fas fa-check mr-2"></i>Include location, time period, or team information in the description</li>
+                    <li><i class="fas fa-check mr-2"></i>Activate the operation immediately if you want staff to start data entry</li>
+                    <li><i class="fas fa-check mr-2"></i>You can activate/deactivate operations later from the operations list</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

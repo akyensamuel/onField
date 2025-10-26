@@ -1,0 +1,388 @@
+{% extends "dataform/base.html" %}
+
+{% block title %}{{ operation.name }} - OnField Recording{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <a href="{% url 'operation_list' %}" class="text-primary hover:text-blue-600 text-sm font-medium mb-2 inline-block">
+            <i class="fas fa-arrow-left mr-1"></i> Back to Operations
+        </a>
+        <div class="flex items-start justify-between">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-3xl font-bold text-gray-800 dark:text-white">{{ operation.name }}</h1>
+                    {% if operation.is_active %}
+                    <span class="badge badge-success">
+                        <i class="fas fa-circle animate-pulse mr-1"></i>Active
+                    </span>
+                    {% else %}
+                    <span class="badge badge-gray">Closed</span>
+                    {% endif %}
+                </div>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">{{ operation.description }}</p>
+            </div>
+            <div class="flex gap-2">
+                <!-- Search Button -->
+                <a href="{% url 'operation_search' operation.pk %}" class="btn bg-purple-600 hover:bg-purple-700 text-white" title="Search records in this operation">
+                    <i class="fas fa-search mr-2"></i>Search Records
+                </a>
+                <!-- Export Buttons -->
+                <a href="{% url 'operation_export_pdf' operation.pk %}" class="btn bg-red-600 hover:bg-red-700 text-white">
+                    <i class="fas fa-file-pdf mr-2"></i>Export PDF
+                </a>
+                <a href="{% url 'operation_export_xlsx' operation.pk %}" class="btn bg-green-600 hover:bg-green-700 text-white">
+                    <i class="fas fa-file-excel mr-2"></i>Export Excel
+                </a>
+                <!-- Operation Controls -->
+                {% if operation.is_active %}
+                <a href="{% url 'operation_close' operation.pk %}" class="btn btn-danger">
+                    <i class="fas fa-stop-circle mr-2"></i>Close Operation
+                </a>
+                {% else %}
+                <a href="{% url 'operation_activate' operation.pk %}" class="btn btn-success">
+                    <i class="fas fa-play-circle mr-2"></i>Activate Operation
+                </a>
+                {% endif %}
+                <button onclick="confirmDelete()" class="btn btn-danger">
+                    <i class="fas fa-trash mr-2"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Records -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Records</p>
+                    <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-2">{{ stats.total_records }}</h3>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                    <i class="fas fa-clipboard-list text-blue-600 dark:text-blue-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Draft Records -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Draft</p>
+                    <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-2">{{ stats.draft }}</h3>
+                </div>
+                <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                    <i class="fas fa-file text-gray-600 dark:text-gray-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submitted Records -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Submitted</p>
+                    <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-2">{{ stats.submitted }}</h3>
+                </div>
+                <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center">
+                    <i class="fas fa-paper-plane text-yellow-600 dark:text-yellow-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Verified Records -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Verified</p>
+                    <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-2">{{ stats.verified }}</h3>
+                </div>
+                <div class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Operation Details & Anomaly Stats -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Operation Information -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">
+                <i class="fas fa-info-circle mr-2 text-gray-500 dark:text-gray-400"></i>
+                Operation Details
+            </h2>
+            <dl class="space-y-3">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created By</dt>
+                    <dd class="text-sm text-gray-900 dark:text-gray-200 mt-1">{{ operation.created_by.username }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created On</dt>
+                    <dd class="text-sm text-gray-900 dark:text-gray-200 mt-1">{{ operation.created_at|date:"F d, Y H:i" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last Updated</dt>
+                    <dd class="text-sm text-gray-900 dark:text-gray-200 mt-1">{{ operation.updated_at|date:"F d, Y H:i" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Next Record Sequence</dt>
+                    <dd class="text-sm text-gray-900 dark:text-gray-200 mt-1 font-mono">{{ operation.next_record_seq }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
+                    <dd class="text-sm text-gray-900 dark:text-gray-200 mt-1">
+                        {% if operation.is_active %}
+                        <span class="badge badge-success">
+                            <i class="fas fa-circle animate-pulse mr-1"></i>Active
+                        </span>
+                        {% else %}
+                        <span class="badge badge-gray">Closed</span>
+                        {% endif %}
+                    </dd>
+                </div>
+            </dl>
+        </div>
+        
+        <!-- Anomaly Distribution -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">
+                <i class="fas fa-exclamation-triangle mr-2 text-gray-500 dark:text-gray-400"></i>
+                Anomaly Distribution
+            </h2>
+            {% if anomaly_stats %}
+            <div class="space-y-3">
+                {% for stat in anomaly_stats %}
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ stat.type_of_anomaly|capfirst }}</span>
+                        <span class="text-sm font-bold text-gray-900 dark:text-white">{{ stat.count }}</span>
+                    </div>
+                    <div class="bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div class="bg-primary rounded-full h-2 transition-all" style="width: {% if stats.total_records > 0 %}{% widthratio stat.count stats.total_records 100 %}%{% else %}0%{% endif %}"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500 dark:text-gray-400 text-sm">No anomalies recorded yet</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Records List -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <div class="p-6 border-b dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">
+                    <i class="fas fa-list mr-2 text-gray-500 dark:text-gray-400"></i>
+                    Records
+                </h2>
+                {% if operation.is_active %}
+                <a href="{% url 'record_create' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus mr-2"></i>New Record
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if records %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-900">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Record #</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customer</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Anomaly</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Staff</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for record in records %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm font-medium font-mono text-gray-900 dark:text-gray-200">{{ record.record_number }}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900 dark:text-gray-200">{{ record.customer_name }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ record.account_number }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if record.status == 'draft' %}
+                            <span class="badge badge-gray">Draft</span>
+                            {% elif record.status == 'submitted' %}
+                            <span class="badge badge-primary">Submitted</span>
+                            {% else %}
+                            <span class="badge badge-success">Verified</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if record.type_of_anomaly %}
+                            <span class="badge badge-warning">{{ record.type_of_anomaly|capfirst }}</span>
+                            {% else %}
+                            <span class="text-gray-400 dark:text-gray-500 text-sm">None</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ record.created_by.username }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900 dark:text-gray-200">{{ record.created_at|date:"M d, Y" }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ record.created_at|time:"H:i" }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                            <a href="{% url 'record_detail' record.pk %}" class="text-primary hover:text-blue-600" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if operation.is_active and record.created_by == request.user %}
+                            <a href="{% url 'record_update' record.pk %}" class="text-green-600 hover:text-green-800" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="px-6 py-4 border-t dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} records
+                </div>
+                <div class="flex gap-2">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    {% endif %}
+                    
+                    <span class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                    
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12">
+            <i class="fas fa-inbox text-gray-300 dark:text-gray-600 text-5xl mb-4"></i>
+            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">No Records Yet</h3>
+            <p class="text-gray-500 dark:text-gray-400 mb-4">No data has been collected for this operation</p>
+            {% if operation.is_active %}
+            <a href="{% url 'record_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus mr-2"></i>Create First Record
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-70 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border dark:border-gray-700 w-full max-w-md shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="mt-3">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900">
+                <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400 text-xl"></i>
+            </div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mt-4 text-center">Delete Operation</h3>
+            
+            <form method="POST" action="{% url 'operation_delete' operation.pk %}" id="deleteForm">
+                {% csrf_token %}
+                <div class="mt-4 px-4">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        Are you sure you want to delete "<strong>{{ operation.name }}</strong>"?
+                        {% if stats.total_records > 0 %}
+                        <br><br>
+                        <span class="text-red-600 dark:text-red-400 font-semibold">
+                            ⚠️ This will permanently delete {{ stats.total_records }} record(s) and all associated data.
+                        </span>
+                        {% else %}
+                        <br><br>
+                        This action cannot be undone.
+                        {% endif %}
+                    </p>
+                    
+                    <!-- Deletion Reason -->
+                    <div class="mb-4">
+                        <label for="deletion_reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Reason for deletion <span class="text-red-500">*</span>
+                        </label>
+                        <textarea 
+                            id="deletion_reason" 
+                            name="deletion_reason" 
+                            rows="3" 
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 dark:bg-gray-700 dark:text-white"
+                            placeholder="Please provide a reason for deleting this operation..."
+                        ></textarea>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            This will be logged for audit purposes.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-center gap-3 px-4 py-3">
+                    <button type="submit" class="px-6 py-2 bg-red-500 text-white text-base font-medium rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition-colors">
+                        <i class="fas fa-trash mr-2"></i>Delete Permanently
+                    </button>
+                    <button type="button" onclick="closeDeleteModal()" class="px-6 py-2 bg-gray-500 text-white text-base font-medium rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete() {
+    document.getElementById('deleteModal').classList.remove('hidden');
+    // Focus on the reason textarea
+    setTimeout(() => {
+        document.getElementById('deletion_reason').focus();
+    }, 100);
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+    // Clear the form
+    document.getElementById('deleteForm').reset();
+}
+
+// Close modal when clicking outside
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDeleteModal();
+    }
+});
+
+// Prevent accidental form submission without reason
+document.getElementById('deleteForm').addEventListener('submit', function(e) {
+    const reason = document.getElementById('deletion_reason').value.trim();
+    if (!reason) {
+        e.preventDefault();
+        alert('Please provide a reason for deletion.');
+        document.getElementById('deletion_reason').focus();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,317 @@
+{% extends "dataform/base.html" %}
+
+{% block title %}Admin Dashboard - OnField Recording{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Admin Dashboard</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">System Overview & Management</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'operation_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus mr-2"></i>New Operation
+            </a>
+            <a href="{% url 'record_create' %}" class="btn btn-secondary">
+                <i class="fas fa-clipboard-list mr-2"></i>New Record
+            </a>
+        </div>
+    </div>
+    
+    <!-- System-Wide Search Bar -->
+    <div class="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-800 dark:to-purple-800 rounded-lg shadow-lg p-6">
+        <div class="flex items-center mb-4">
+            <i class="fas fa-search text-white text-2xl mr-3"></i>
+            <h2 class="text-xl font-semibold text-white">Search All Records</h2>
+        </div>
+        <form method="get" action="{% url 'system_search' %}" class="flex gap-3">
+            <div class="flex-1">
+                <input
+                    type="text"
+                    name="q"
+                    placeholder="Search by customer name, contact, account, meter number, GPS address, job number, operation name, or remarks..."
+                    class="block w-full px-4 py-3 border border-transparent rounded-lg bg-white/95 dark:bg-gray-800/95 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-white focus:border-transparent shadow-sm"
+                >
+            </div>
+            <button type="submit" class="btn bg-white text-blue-600 hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-400 dark:hover:bg-gray-700 px-8 shadow-sm">
+                <i class="fas fa-search mr-2"></i>Search System
+            </button>
+        </form>
+        <p class="text-white/90 text-sm mt-3">
+            <i class="fas fa-info-circle mr-1"></i>
+            Search across all operations and records system-wide
+        </p>
+    </div>
+    
+    <!-- Active Operation Status -->
+    {% if active_operation %}
+    <div class="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-4 rounded-lg">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-circle-check text-green-500 text-2xl mr-3"></i>
+                <div>
+                    <h3 class="font-semibold text-green-800 dark:text-green-300">Active Operation</h3>
+                    <p class="text-green-700 dark:text-green-400">{{ active_operation.name }}</p>
+                </div>
+            </div>
+            <a href="{% url 'operation_detail' active_operation.pk %}" class="btn btn-success btn-sm">
+                <i class="fas fa-eye mr-2"></i>View Details
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded-lg">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl mr-3"></i>
+                <div>
+                    <h3 class="font-semibold text-yellow-800 dark:text-yellow-300">No Active Operation</h3>
+                    <p class="text-yellow-700 dark:text-yellow-400">Staff cannot create records until an operation is activated.</p>
+                </div>
+            </div>
+            <a href="{% url 'operation_create' %}" class="btn btn-warning btn-sm">
+                <i class="fas fa-plus mr-2"></i>Create Operation
+            </a>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Overview Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Operations -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Operations</p>
+                    <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-2">{{ total_operations }}</h3>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                    <i class="fas fa-tasks text-purple-600 dark:text-purple-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Records -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Records</p>
+                    <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-2">{{ total_records }}</h3>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                    <i class="fas fa-clipboard-list text-blue-600 dark:text-blue-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Active Operation -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Active Operation</p>
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white mt-2">
+                        {% if active_operation %}
+                        <span class="text-green-600 dark:text-green-400"><i class="fas fa-check-circle"></i> Yes</span>
+                        {% else %}
+                        <span class="text-red-600 dark:text-red-400"><i class="fas fa-times-circle"></i> No</span>
+                        {% endif %}
+                    </h3>
+                </div>
+                <div class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                    <i class="fas fa-power-off text-green-600 dark:text-green-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Today's Records -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Today's Records</p>
+                    <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-2">
+                        {{ recent_records|length }}
+                    </h3>
+                </div>
+                <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center">
+                    <i class="fas fa-calendar-day text-yellow-600 dark:text-yellow-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Anomaly Distribution -->
+    {% if anomaly_stats %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">
+            <i class="fas fa-chart-pie mr-2 text-gray-500 dark:text-gray-400"></i>
+            Anomaly Distribution
+        </h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {% for stat in anomaly_stats %}
+            <div class="border dark:border-gray-700 rounded-lg p-4">
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">{{ stat.type_of_anomaly|capfirst }}</p>
+                <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ stat.count }}</p>
+                <div class="mt-2 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div class="bg-primary rounded-full h-2" style="width: {% widthratio stat.count total_records 100 %}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Recent Operations -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <div class="p-6 border-b dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">
+                    <i class="fas fa-tasks mr-2 text-gray-500 dark:text-gray-400"></i>
+                    Recent Operations
+                </h2>
+                <a href="{% url 'operation_list' %}" class="text-primary hover:text-blue-600 text-sm font-medium">
+                    View All <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            {% if operations %}
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-900">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Operation</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Records</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for operation in operations %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ operation.name }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ operation.description|truncatewords:10 }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if operation.is_active %}
+                            <span class="badge badge-success">
+                                <i class="fas fa-circle animate-pulse mr-1"></i>Active
+                            </span>
+                            {% else %}
+                            <span class="badge badge-gray">Closed</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ operation.total_records }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {{ operation.created_at|date:"M d, Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <a href="{% url 'operation_detail' operation.pk %}" class="text-primary hover:text-blue-600 mr-3">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            {% if operation.is_active %}
+                            <a href="{% url 'operation_close' operation.pk %}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                                <i class="fas fa-stop-circle"></i> Close
+                            </a>
+                            {% else %}
+                            <a href="{% url 'operation_activate' operation.pk %}" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300">
+                                <i class="fas fa-play-circle"></i> Activate
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="text-center py-12">
+                <i class="fas fa-tasks text-gray-300 dark:text-gray-600 text-5xl mb-4"></i>
+                <p class="text-gray-500 dark:text-gray-400 mb-4">No operations created yet</p>
+                <a href="{% url 'operation_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Create First Operation
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Recent Records -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <div class="p-6 border-b dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">
+                    <i class="fas fa-clock mr-2 text-gray-500 dark:text-gray-400"></i>
+                    Recent Records
+                </h2>
+                <a href="{% url 'record_list' %}" class="text-primary hover:text-blue-600 text-sm font-medium">
+                    View All <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            {% if recent_records %}
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-900">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Record #</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customer</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Operation</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Staff</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for record in recent_records %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ record.record_number }}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900 dark:text-white">{{ record.customer_name }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ record.account_number }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm text-gray-900 dark:text-gray-300">{{ record.operation.name|truncatewords:3 }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ record.created_by.username }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if record.status == 'draft' %}
+                            <span class="badge badge-gray">Draft</span>
+                            {% elif record.status == 'submitted' %}
+                            <span class="badge badge-primary">Submitted</span>
+                            {% else %}
+                            <span class="badge badge-success">Verified</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {{ record.created_at|date:"M d, H:i" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <a href="{% url 'record_detail' record.pk %}" class="text-primary hover:text-blue-600">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="text-center py-12">
+                <i class="fas fa-inbox text-gray-300 dark:text-gray-600 text-5xl mb-4"></i>
+                <p class="text-gray-500 dark:text-gray-400">No records created yet</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

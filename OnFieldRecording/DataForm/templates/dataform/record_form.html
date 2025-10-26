@@ -1,0 +1,466 @@
+{% extends "dataform/base.html" %}
+
+{% block title %}{% if form.instance.pk %}Edit Record{% else %}New Record{% endif %} - OnField Recording{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <div>
+        <a href="{% url 'record_list' %}" class="text-primary hover:text-blue-600 text-sm font-medium mb-2 inline-block">
+            <i class="fas fa-arrow-left mr-1"></i> Back to Records
+        </a>
+        <h1 class="text-3xl font-bold text-gray-800">
+            {% if form.instance.pk %}
+            Edit Record {{ form.instance.record_number }}
+            {% else %}
+            Create New Record
+            {% endif %}
+        </h1>
+        <p class="text-gray-600 mt-1">Field data collection form</p>
+    </div>
+    
+    <!-- Active Operation Info -->
+    {% if active_operation %}
+    <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
+        <div class="flex items-center">
+            <i class="fas fa-circle-check text-green-500 text-xl mr-3"></i>
+            <div>
+                <h3 class="font-semibold text-green-800">Active Operation</h3>
+                <p class="text-green-700">{{ active_operation.name }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Form -->
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- Display Form Errors -->
+        {% if form.non_field_errors %}
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+            <div class="flex">
+                <i class="fas fa-times-circle text-red-500 text-xl mr-3"></i>
+                <div>
+                    <h3 class="font-semibold text-red-800">Error</h3>
+                    {% for error in form.non_field_errors %}
+                    <p class="text-red-700 text-sm">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Customer Information -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+                <i class="fas fa-user mr-2 text-gray-500"></i>
+                Customer Information
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Customer Name -->
+                <div class="md:col-span-2">
+                    <label for="{{ form.customer_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Customer Name <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.customer_name }}
+                    {% if form.customer_name.errors %}
+                    <p class="text-red-500 text-sm mt-1">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        {{ form.customer_name.errors.0 }}
+                    </p>
+                    {% endif %}
+                </div>
+                
+                <!-- Customer Contact -->
+                <div>
+                    <label for="{{ form.customer_contact.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Customer Contact <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.customer_contact }}
+                    {% if form.customer_contact.errors %}
+                    <p class="text-red-500 text-sm mt-1">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        {{ form.customer_contact.errors.0 }}
+                    </p>
+                    {% endif %}
+                    <p class="text-gray-500 text-xs mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Format: 07XXXXXXXX or 01XXXXXXXX
+                    </p>
+                </div>
+                
+                <!-- Account Number -->
+                <div>
+                    <label for="{{ form.account_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Account Number <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.account_number }}
+                    {% if form.account_number.errors %}
+                    <p class="text-red-500 text-sm mt-1">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        {{ form.account_number.errors.0 }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- GPS Location -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+                <i class="fas fa-map-marker-alt mr-2 text-gray-500"></i>
+                GPS Location
+            </h2>
+            
+            <!-- GPS Capture Button -->
+            <div class="mb-4">
+                <button type="button" id="captureGpsBtn" class="btn btn-success">
+                    <i class="fas fa-crosshairs mr-2"></i>
+                    Capture Current Location
+                </button>
+                <span id="gpsStatus" class="ml-3 text-sm text-gray-500"></span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- GPS Latitude -->
+                <div>
+                    <label for="{{ form.gps_latitude.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Latitude <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.gps_latitude }}
+                    {% if form.gps_latitude.errors %}
+                    <p class="text-red-500 text-sm mt-1">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        {{ form.gps_latitude.errors.0 }}
+                    </p>
+                    {% endif %}
+                </div>
+                
+                <!-- GPS Longitude -->
+                <div>
+                    <label for="{{ form.gps_longitude.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Longitude <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.gps_longitude }}
+                    {% if form.gps_longitude.errors %}
+                    <p class="text-red-500 text-sm mt-1">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        {{ form.gps_longitude.errors.0 }}
+                    </p>
+                    {% endif %}
+                </div>
+                
+                <!-- GPS Address -->
+                <div class="md:col-span-2">
+                    <label for="{{ form.gps_address.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Address (e.g., AH-2324-2424) <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.gps_address }}
+                    {% if form.gps_address.errors %}
+                    <p class="text-red-500 text-sm mt-1">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        {{ form.gps_address.errors.0 }}
+                    </p>
+                    {% endif %}
+                    <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Enter house number/address manually. GPS coordinates will be used as fallback if empty.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Meter Information -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+                <i class="fas fa-tachometer-alt mr-2 text-gray-500"></i>
+                Meter Information
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Meter Number -->
+                <div>
+                    <label for="{{ form.meter_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Meter Number <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.meter_number }}
+                    {% if form.meter_number.errors %}
+                    <p class="text-red-500 text-sm mt-1">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        {{ form.meter_number.errors.0 }}
+                    </p>
+                    {% endif %}
+                </div>
+                
+                <!-- Meter Reading -->
+                <div>
+                    <label for="{{ form.meter_reading.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Meter Reading <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.meter_reading }}
+                    {% if form.meter_reading.errors %}
+                    <p class="text-red-500 text-sm mt-1">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        {{ form.meter_reading.errors.0 }}
+                    </p>
+                    {% endif %}
+                    <p class="text-gray-500 text-xs mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Current meter reading value
+                    </p>
+                </div>
+                
+                <!-- Today's Balance -->
+                <div>
+                    <label for="{{ form.todays_balance.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Today's Balance <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.todays_balance }}
+                    {% if form.todays_balance.errors %}
+                    <p class="text-red-500 text-sm mt-1">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        {{ form.todays_balance.errors.0 }}
+                    </p>
+                    {% endif %}
+                    <p class="text-gray-500 text-xs mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Format: 123456.78
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Anomaly & Remarks -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+                <i class="fas fa-exclamation-triangle mr-2 text-gray-500"></i>
+                Anomaly & Remarks
+            </h2>
+            
+            <div class="space-y-6">
+                <!-- Type of Anomaly -->
+                <div>
+                    <label for="{{ form.type_of_anomaly.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Type of Anomaly
+                    </label>
+                    {{ form.type_of_anomaly }}
+                    {% if form.type_of_anomaly.errors %}
+                    <p class="text-red-500 text-sm mt-1">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        {{ form.type_of_anomaly.errors.0 }}
+                    </p>
+                    {% endif %}
+                    <p class="text-gray-500 text-xs mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Select if any irregularity is detected
+                    </p>
+                </div>
+                
+                <!-- Remarks -->
+                <div>
+                    <label for="{{ form.remarks.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Remarks
+                    </label>
+                    {{ form.remarks }}
+                    {% if form.remarks.errors %}
+                    <p class="text-red-500 text-sm mt-1">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        {{ form.remarks.errors.0 }}
+                    </p>
+                    {% endif %}
+                    <p class="text-gray-500 text-xs mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Additional notes, observations, or comments
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Photos -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+                <i class="fas fa-camera mr-2 text-gray-500"></i>
+                Photos
+            </h2>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Upload Photos
+                </label>
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
+                    <input type="file" name="photos" id="photoInput" accept="image/jpeg,image/png" multiple class="hidden">
+                    <label for="photoInput" class="cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-gray-400 text-4xl mb-2 block"></i>
+                        <p class="text-gray-600 font-medium">Click to upload or drag and drop</p>
+                        <p class="text-gray-500 text-sm mt-1">JPG or PNG (Max 5MB per file)</p>
+                    </label>
+                </div>
+                <div id="photoPreview" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4"></div>
+            </div>
+        </div>
+        
+        <!-- Form Actions -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <a href="{% url 'record_list' %}" class="text-gray-600 hover:text-gray-800 font-medium">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </a>
+                <div class="flex gap-3">
+                    <button type="submit" name="status" value="draft" class="btn btn-secondary">
+                        <i class="fas fa-save mr-2"></i>Save as Draft
+                    </button>
+                    <button type="submit" name="status" value="submitted" class="btn btn-primary">
+                        <i class="fas fa-paper-plane mr-2"></i>Submit Record
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- GPS Capture Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const captureBtn = document.getElementById('captureGpsBtn');
+    const gpsStatus = document.getElementById('gpsStatus');
+    const latInput = document.getElementById('{{ form.gps_latitude.id_for_label }}');
+    const lonInput = document.getElementById('{{ form.gps_longitude.id_for_label }}');
+    const addressInput = document.getElementById('{{ form.gps_address.id_for_label }}');
+    
+    captureBtn.addEventListener('click', function() {
+        if (!navigator.geolocation) {
+            gpsStatus.innerHTML = '<i class="fas fa-times-circle text-red-500"></i> GPS not supported';
+            return;
+        }
+        
+        gpsStatus.innerHTML = '<i class="fas fa-spinner fa-spin text-blue-500"></i> Capturing precise location...';
+        captureBtn.disabled = true;
+        
+        // Try high accuracy first for best precision
+        const highAccuracyOptions = {
+            enableHighAccuracy: true,   // Use GPS satellites for precision
+            timeout: 15000,              // Wait up to 15 seconds
+            maximumAge: 0                // Get fresh location
+        };
+        
+        const lowAccuracyOptions = {
+            enableHighAccuracy: false,  // Use WiFi/cellular (faster fallback)
+            timeout: 10000,              // Faster timeout for fallback
+            maximumAge: 300000           // Accept cached location
+        };
+        
+        // Success handler
+        function handleSuccess(position) {
+            const lat = position.coords.latitude.toFixed(6);
+            const lon = position.coords.longitude.toFixed(6);
+            const accuracy = position.coords.accuracy.toFixed(0);
+            
+            latInput.value = lat;
+            lonInput.value = lon;
+            
+            // Only auto-fill address if empty (manual address takes priority)
+            const currentAddress = addressInput.value.trim();
+            if (!currentAddress || currentAddress.startsWith('Lat:')) {
+                addressInput.value = `Lat: ${lat}, Lon: ${lon}`;
+            }
+            
+            const accuracyLabel = accuracy < 50 ? 'Excellent' : accuracy < 100 ? 'Good' : 'Fair';
+            gpsStatus.innerHTML = `<i class="fas fa-check-circle text-green-500"></i> Location captured! (${accuracyLabel}: ±${accuracy}m)`;
+            captureBtn.disabled = false;
+        }
+        
+        // Error handler with fallback
+        function handleError(error) {
+            // If high accuracy times out, try fast mode as fallback
+            if (error.code === error.TIMEOUT) {
+                gpsStatus.innerHTML = '<i class="fas fa-spinner fa-spin text-yellow-500"></i> Switching to fast mode...';
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        handleSuccess(position);
+                        // Add note that fallback was used
+                        const currentStatus = gpsStatus.innerHTML;
+                        gpsStatus.innerHTML = currentStatus.replace('Location captured!', 'Location captured (fast mode)!');
+                    },
+                    function(fallbackError) {
+                        // Both methods failed
+                        showFinalError(fallbackError);
+                    },
+                    lowAccuracyOptions
+                );
+            } else {
+                // Permission denied or position unavailable - show error
+                showFinalError(error);
+            }
+        }
+        
+        function showFinalError(error) {
+            let errorMsg = 'Unable to capture location';
+            let helpText = '';
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMsg = 'Permission denied';
+                    helpText = 'Please enable location access in your browser settings.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMsg = 'Location unavailable';
+                    helpText = 'Your device cannot determine your location. Try moving to an open area.';
+                    break;
+                case error.TIMEOUT:
+                    errorMsg = 'Request timed out';
+                    helpText = 'Location service is too slow. Try again later or check your connection.';
+                    break;
+            }
+            
+            gpsStatus.innerHTML = `<i class="fas fa-times-circle text-red-500"></i> ${errorMsg}<br><small class="text-gray-600 dark:text-gray-400">${helpText}</small>`;
+            captureBtn.disabled = false;
+        }
+        
+        // Start with high accuracy
+        navigator.geolocation.getCurrentPosition(
+            handleSuccess,
+            handleError,
+            highAccuracyOptions
+        );
+    });
+    
+    // Photo upload preview
+    const photoInput = document.getElementById('photoInput');
+    const photoPreview = document.getElementById('photoPreview');
+    
+    photoInput.addEventListener('change', function() {
+        photoPreview.innerHTML = '';
+        const files = Array.from(this.files);
+        
+        files.forEach((file, index) => {
+            if (file.size > 5 * 1024 * 1024) {
+                alert(`${file.name} is too large. Maximum size is 5MB.`);
+                return;
+            }
+            
+            if (!['image/jpeg', 'image/png'].includes(file.type)) {
+                alert(`${file.name} is not a valid image type. Only JPG and PNG are allowed.`);
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.className = 'relative group';
+                div.innerHTML = `
+                    <img src="${e.target.result}" class="w-full h-32 object-cover rounded-lg border-2 border-gray-200">
+                    <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                        <span class="text-white text-sm">${file.name}</span>
+                    </div>
+                `;
+                photoPreview.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+});
+</script>
+{% endblock %}

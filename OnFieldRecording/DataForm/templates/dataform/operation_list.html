@@ -1,0 +1,134 @@
+{% extends "dataform/base.html" %}
+
+{% block title %}Operations - OnField Recording{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Operations</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Manage field operations and data collection projects</p>
+        </div>
+        <a href="{% url 'operation_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus mr-2"></i>New Operation
+        </a>
+    </div>
+    
+    <!-- Operations List -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <div class="p-6 border-b dark:border-gray-700">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">All Operations</h2>
+        </div>
+        
+        {% if operations %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-900">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Operation Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Records</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created By</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for operation in operations %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 {% if operation.is_active %}bg-green-50 dark:bg-green-900/20{% endif %}">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                {% if operation.is_active %}
+                                <i class="fas fa-circle text-green-500 text-xs mr-2 animate-pulse"></i>
+                                {% endif %}
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ operation.name }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ operation.description|truncatewords:15 }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if operation.is_active %}
+                            <span class="badge badge-success">
+                                <i class="fas fa-circle animate-pulse mr-1"></i>Active
+                            </span>
+                            {% else %}
+                            <span class="badge badge-gray">Closed</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900 dark:text-white font-medium">{{ operation.total_records }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                Next: {{ operation.next_record_seq }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-700 dark:text-gray-300">{{ operation.created_by.username }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900 dark:text-white">{{ operation.created_at|date:"M d, Y" }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ operation.created_at|time:"H:i" }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                            <a href="{% url 'operation_detail' operation.pk %}" class="text-primary hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if operation.is_active %}
+                            <a href="{% url 'operation_close' operation.pk %}" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Close Operation">
+                                <i class="fas fa-stop-circle"></i>
+                            </a>
+                            {% else %}
+                            <a href="{% url 'operation_activate' operation.pk %}" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300" title="Activate Operation">
+                                <i class="fas fa-play-circle"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="px-6 py-4 border-t dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} operations
+                </div>
+                <div class="flex gap-2">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    {% endif %}
+                    
+                    <span class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                    
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-16">
+            <i class="fas fa-tasks text-gray-300 dark:text-gray-600 text-6xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No Operations Yet</h3>
+            <p class="text-gray-500 dark:text-gray-400 mb-6">Create your first operation to start collecting field data</p>
+            <a href="{% url 'operation_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus mr-2"></i>Create Operation
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

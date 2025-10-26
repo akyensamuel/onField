@@ -1,0 +1,385 @@
+{% extends "dataform/base.html" %}
+
+{% block title %}Record {{ record.record_number }} - OnField Recording{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+    <!-- Header -->
+    <div>
+        <a href="{% url 'record_list' %}" class="text-primary hover:text-blue-600 text-sm font-medium mb-2 inline-block">
+            <i class="fas fa-arrow-left mr-1"></i> Back to Records
+        </a>
+        <div class="flex items-start justify-between">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <h1 class="text-3xl font-bold text-gray-800">{{ record.record_number }}</h1>
+                    {% if record.status == 'draft' %}
+                    <span class="badge badge-gray">
+                        <i class="fas fa-file mr-1"></i>Draft
+                    </span>
+                    {% elif record.status == 'submitted' %}
+                    <span class="badge badge-primary">
+                        <i class="fas fa-paper-plane mr-1"></i>Submitted
+                    </span>
+                    {% else %}
+                    <span class="badge badge-success">
+                        <i class="fas fa-check-circle mr-1"></i>Verified
+                    </span>
+                    {% endif %}
+                    
+                    {% if record.type_of_anomaly %}
+                    <span class="badge badge-warning">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        {{ record.type_of_anomaly|capfirst }}
+                    </span>
+                    {% endif %}
+                </div>
+                <p class="text-gray-600">Operation: {{ record.operation.name }}</p>
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex gap-2">
+                {% if record.operation.is_active and record.created_by == request.user %}
+                <a href="{% url 'record_update' record.pk %}" class="btn btn-primary">
+                    <i class="fas fa-edit mr-2"></i>Edit Record
+                </a>
+                {% endif %}
+                {% if user.profile.role == 'admin' or record.created_by == request.user %}
+                <button onclick="confirmRecordDelete()" class="btn btn-danger">
+                    <i class="fas fa-trash mr-2"></i>Delete
+                </button>
+                {% endif %}
+                {% if user.profile.role == 'admin' %}
+                <button class="btn btn-success">
+                    <i class="fas fa-file-pdf mr-2"></i>Export PDF
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Customer Information -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+            <i class="fas fa-user mr-2 text-gray-500"></i>
+            Customer Information
+        </h2>
+        <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Customer Name</dt>
+                <dd class="text-base text-gray-900 mt-1 font-medium">{{ record.customer_name }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Customer Contact</dt>
+                <dd class="text-base text-gray-900 mt-1">
+                    <i class="fas fa-phone mr-1 text-gray-400"></i>
+                    {{ record.customer_contact }}
+                </dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Account Number</dt>
+                <dd class="text-base text-gray-900 mt-1 font-mono">{{ record.account_number }}</dd>
+            </div>
+        </dl>
+    </div>
+    
+    <!-- GPS Location -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+            <i class="fas fa-map-marker-alt mr-2 text-gray-500"></i>
+            GPS Location
+        </h2>
+        <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Latitude</dt>
+                <dd class="text-base text-gray-900 mt-1 font-mono">{{ record.gps_latitude }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Longitude</dt>
+                <dd class="text-base text-gray-900 mt-1 font-mono">{{ record.gps_longitude }}</dd>
+            </div>
+            <div class="md:col-span-2">
+                <dt class="text-sm font-medium text-gray-500">Address</dt>
+                <dd class="text-base text-gray-900 mt-1">{{ record.gps_address }}</dd>
+            </div>
+            <div class="md:col-span-2">
+                <dt class="text-sm font-medium text-gray-500">Map</dt>
+                <dd class="mt-2">
+                    <a href="https://www.google.com/maps?q={{ record.gps_latitude }},{{ record.gps_longitude }}" 
+                       target="_blank" 
+                       class="inline-flex items-center text-primary hover:text-blue-600">
+                        <i class="fas fa-external-link-alt mr-2"></i>
+                        View on Google Maps
+                    </a>
+                </dd>
+            </div>
+        </dl>
+    </div>
+    
+    <!-- Meter Information -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+            <i class="fas fa-tachometer-alt mr-2 text-gray-500"></i>
+            Meter Information
+        </h2>
+        <dl class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Meter Number</dt>
+                <dd class="text-base text-gray-900 mt-1 font-mono">{{ record.meter_number }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Meter Reading</dt>
+                <dd class="text-base text-gray-900 mt-1 font-medium">{{ record.meter_reading }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Today's Balance</dt>
+                <dd class="text-base text-gray-900 mt-1 font-bold">KES {{ record.todays_balance|floatformat:2 }}</dd>
+            </div>
+        </dl>
+    </div>
+    
+    <!-- Anomaly & Remarks -->
+    {% if record.type_of_anomaly or record.remarks %}
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+            <i class="fas fa-exclamation-triangle mr-2 text-gray-500"></i>
+            Anomaly & Remarks
+        </h2>
+        <dl class="space-y-4">
+            {% if record.type_of_anomaly %}
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Type of Anomaly</dt>
+                <dd class="mt-1">
+                    <span class="badge badge-warning">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        {{ record.type_of_anomaly|capfirst }}
+                    </span>
+                </dd>
+            </div>
+            {% endif %}
+            {% if record.remarks %}
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Remarks</dt>
+                <dd class="text-base text-gray-900 mt-1 whitespace-pre-line">{{ record.remarks }}</dd>
+            </div>
+            {% endif %}
+        </dl>
+    </div>
+    {% endif %}
+    
+    <!-- Photos -->
+    {% if record.media_files.all %}
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+            <i class="fas fa-camera mr-2 text-gray-500"></i>
+            Photos ({{ record.media_files.count }})
+        </h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {% for photo in record.media_files.all %}
+            <div class="relative group">
+                <a href="{{ photo.image.url }}" target="_blank" class="block">
+                    <img src="{{ photo.image.url }}" 
+                         alt="Record photo" 
+                         class="w-full h-48 object-cover rounded-lg border-2 border-gray-200 hover:border-primary transition-colors">
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity rounded-lg flex items-center justify-center">
+                        <i class="fas fa-search-plus text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                </a>
+                <div class="mt-2 text-xs text-gray-500">
+                    <i class="fas fa-clock mr-1"></i>
+                    {{ photo.uploaded_at|date:"M d, H:i" }}
+                </div>
+                {% if photo.file_size %}
+                <div class="text-xs text-gray-500">
+                    <i class="fas fa-file mr-1"></i>
+                    {{ photo.file_size|filesizeformat }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Record Metadata -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+            <i class="fas fa-info-circle mr-2 text-gray-500"></i>
+            Record Information
+        </h2>
+        <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Created By</dt>
+                <dd class="text-base text-gray-900 mt-1">
+                    <i class="fas fa-user mr-1 text-gray-400"></i>
+                    {{ record.created_by.username }}
+                    {% if record.created_by.profile.employee_id %}
+                    <span class="text-sm text-gray-500">({{ record.created_by.profile.employee_id }})</span>
+                    {% endif %}
+                </dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Created On</dt>
+                <dd class="text-base text-gray-900 mt-1">
+                    <i class="fas fa-calendar mr-1 text-gray-400"></i>
+                    {{ record.created_at|date:"F d, Y H:i" }}
+                </dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Last Updated</dt>
+                <dd class="text-base text-gray-900 mt-1">
+                    <i class="fas fa-clock mr-1 text-gray-400"></i>
+                    {{ record.updated_at|date:"F d, Y H:i" }}
+                </dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Operation</dt>
+                <dd class="text-base text-gray-900 mt-1">
+                    <a href="{% url 'operation_detail' record.operation.pk %}" class="text-primary hover:text-blue-600">
+                        {{ record.operation.name }}
+                        <i class="fas fa-external-link-alt ml-1 text-xs"></i>
+                    </a>
+                </dd>
+            </div>
+        </dl>
+    </div>
+    
+    <!-- Audit Trail -->
+    {% if user.profile.role == 'admin' and audit_logs %}
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+            <i class="fas fa-history mr-2 text-gray-500"></i>
+            Audit Trail
+        </h2>
+        <div class="space-y-3">
+            {% for log in audit_logs %}
+            <div class="flex items-start gap-3 border-l-2 border-gray-200 pl-4 py-2">
+                <div class="flex-shrink-0 mt-1">
+                    {% if log.action_type == 'record_created' %}
+                    <i class="fas fa-plus-circle text-green-500"></i>
+                    {% elif log.action_type == 'record_updated' %}
+                    <i class="fas fa-edit text-blue-500"></i>
+                    {% elif log.action_type == 'media_uploaded' %}
+                    <i class="fas fa-camera text-purple-500"></i>
+                    {% else %}
+                    <i class="fas fa-circle text-gray-400"></i>
+                    {% endif %}
+                </div>
+                <div class="flex-grow">
+                    <p class="text-sm text-gray-900">
+                        <span class="font-medium">{{ log.user.username }}</span>
+                        {% if log.action_type == 'record_created' %}
+                        created this record
+                        {% elif log.action_type == 'record_updated' %}
+                        updated this record
+                        {% elif log.action_type == 'media_uploaded' %}
+                        uploaded a photo
+                        {% else %}
+                        {{ log.action_type|title }}
+                        {% endif %}
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-clock mr-1"></i>
+                        {{ log.timestamp|date:"F d, Y H:i:s" }}
+                    </p>
+                    {% if log.ip_address %}
+                    <p class="text-xs text-gray-500">
+                        <i class="fas fa-network-wired mr-1"></i>
+                        {{ log.ip_address }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Record Confirmation Modal -->
+<div id="deleteRecordModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-gray-900 dark:bg-opacity-70 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border dark:border-gray-700 w-full max-w-md shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="mt-3">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900">
+                <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400 text-xl"></i>
+            </div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mt-4 text-center">Delete Record</h3>
+            
+            <form method="POST" action="{% url 'record_delete' record.pk %}" id="deleteRecordForm">
+                {% csrf_token %}
+                <div class="mt-4 px-4">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        Are you sure you want to delete record "<strong>{{ record.record_number }}</strong>"?
+                        <br><br>
+                        <span class="text-red-600 dark:text-red-400 font-semibold">
+                            ⚠️ This will permanently delete the record and all {{ record.media_files.count }} associated photo(s).
+                        </span>
+                        <br><br>
+                        This action cannot be undone.
+                    </p>
+                    
+                    <!-- Deletion Reason -->
+                    <div class="mb-4">
+                        <label for="record_deletion_reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Reason for deletion <span class="text-red-500">*</span>
+                        </label>
+                        <textarea 
+                            id="record_deletion_reason" 
+                            name="deletion_reason" 
+                            rows="3" 
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 dark:bg-gray-700 dark:text-white"
+                            placeholder="Please provide a reason for deleting this record..."
+                        ></textarea>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            This will be logged for audit purposes.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-center gap-3 px-4 py-3">
+                    <button type="submit" class="px-6 py-2 bg-red-500 text-white text-base font-medium rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition-colors">
+                        <i class="fas fa-trash mr-2"></i>Delete Permanently
+                    </button>
+                    <button type="button" onclick="closeRecordDeleteModal()" class="px-6 py-2 bg-gray-500 text-white text-base font-medium rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmRecordDelete() {
+    document.getElementById('deleteRecordModal').classList.remove('hidden');
+    // Focus on the reason textarea
+    setTimeout(() => {
+        document.getElementById('record_deletion_reason').focus();
+    }, 100);
+}
+
+function closeRecordDeleteModal() {
+    document.getElementById('deleteRecordModal').classList.add('hidden');
+    // Clear the form
+    document.getElementById('deleteRecordForm').reset();
+}
+
+// Close modal when clicking outside
+document.getElementById('deleteRecordModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRecordDeleteModal();
+    }
+});
+
+// Prevent accidental form submission without reason
+document.getElementById('deleteRecordForm').addEventListener('submit', function(e) {
+    const reason = document.getElementById('record_deletion_reason').value.trim();
+    if (!reason) {
+        e.preventDefault();
+        alert('Please provide a reason for deletion.');
+        document.getElementById('record_deletion_reason').focus();
+    }
+});
+</script>
+{% endblock %}

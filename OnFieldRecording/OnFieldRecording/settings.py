@@ -193,3 +193,47 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
+# Media Files (User Uploads)
+# Configure storage backend based on environment
+USE_SUPABASE_STORAGE = config('USE_SUPABASE_STORAGE', default=False, cast=bool)
+
+if USE_SUPABASE_STORAGE:
+    # Use Supabase Storage for media files
+    DEFAULT_FILE_STORAGE = 'DataForm.backends.SupabaseMediaStorage'
+    MEDIA_URL = config('SUPABASE_URL', default='') + '/storage/v1/object/public/'
+else:
+    # Use local filesystem storage (development/fallback)
+    MEDIA_ROOT = BASE_DIR / 'media'
+    MEDIA_URL = '/media/'
+
+# Supabase Storage Configuration
+SUPABASE_URL = config('SUPABASE_URL', default='')
+SUPABASE_KEY = config('SUPABASE_KEY', default='')
+SUPABASE_STORAGE_BUCKET = config('SUPABASE_STORAGE_BUCKET', default='onfield-media')
+
+# File Upload Settings
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+FILE_UPLOAD_PERMISSIONS = 0o644
+
+# Allowed file extensions for uploads
+ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif']
+MAX_UPLOAD_SIZE = 5242880  # 5MB
+
+# =============================================
+# SENTRY ERROR MONITORING
+# =============================================
+SENTRY_DSN = config('SENTRY_DSN', default='')
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=0.1,  # 10% of transactions for performance monitoring
+        send_default_pii=False,  # Don't send personally identifiable information
+        environment='production' if not DEBUG else 'development',
+        # Optionally capture user context (without PII)
+        before_send=lambda event, hint: event,  # Can add filtering logic here
+    )

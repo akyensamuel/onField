@@ -24,9 +24,21 @@ admin.site.site_header = "OnField Recording Administration"
 admin.site.site_title = "OnField Admin"
 admin.site.index_title = "Welcome to OnField Recording System"
 
+
+# Sentry Debug View (REMOVE IN PRODUCTION!)
+def trigger_sentry_error(request):
+    """
+    Deliberately triggers an error to test Sentry integration.
+    This endpoint should be REMOVED before production deployment!
+    """
+    division_by_zero = 1 / 0
+    return division_by_zero  # This line will never execute
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('DataForm.urls')),  # Include DataForm app URLs
+    path('sentry-debug/', trigger_sentry_error, name='sentry_debug'),  # TODO: REMOVE BEFORE PRODUCTION
 ]
 
 # Serve media files in development

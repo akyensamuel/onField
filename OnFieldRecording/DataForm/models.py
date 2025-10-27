@@ -272,7 +272,8 @@ class RecordMedia(models.Model):
     """Media files (photos) attached to records"""
     
     record = models.ForeignKey(Record, on_delete=models.CASCADE, related_name='media_files')
-    image = models.ImageField(upload_to=record_media_upload_path)
+    image = models.ImageField(upload_to=record_media_upload_path, storage=None)  # Storage set in settings
+    storage_url = models.URLField(max_length=500, blank=True, help_text="Cloud storage URL")
     uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     file_size = models.IntegerField(help_text="File size in bytes", editable=False)

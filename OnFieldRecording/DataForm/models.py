@@ -244,6 +244,33 @@ class Record(models.Model):
             except Operation.DoesNotExist:
                 pass  # Let the foreign key handle this validation
     
+    def save(self, *args, **kwargs):
+        """Auto-generate record_number if not set"""
+        if not self.record_number:
+            # Get the last record for this operation to determine next number
+            from django.db import transaction
+            
+            with transaction.atomic():
+                # Lock the operation to prevent race conditions
+                last_record = Record.objects.filter(
+                    operation=self.operation
+                ).select_for_update().order_by('-id').first()
+                
+                if last_record and last_record.record_number:
+                    # Extract number from format: REC-OP{id}-{num:04d}
+                    try:
+                        last_num = int(last_record.record_number.split('-')[-1])
+                        new_num = last_num + 1
+                    except (ValueError, IndexError):
+                        new_num = 1
+                else:
+                    new_num = 1
+                
+                # Generate record number: REC-OP{operation_id}-{number:04d}
+                self.record_number = f"REC-OP{self.operation.id}-{new_num:04d}"
+        
+        super().save(*args, **kwargs)
+    
     @property
     def has_gps(self):
         """Check if record has GPS coordinates"""
